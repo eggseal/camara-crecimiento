@@ -13,9 +13,8 @@ architecture-beta
     service nodered(server)[NodeRed] in vm
     service influx(database)[InfluxDB] in vm
     service postgres(database)[PostgreSQL] in vm
-    service images(disk)[Images] in vm
 
-    group nginx[Nginx] in vm
+    group nginx(server)[Nginx] in vm
     service rtmpserver(server)[RTMP Server] in nginx
     service httpserver(server)[HTTP Server] in nginx
 
@@ -27,7 +26,6 @@ architecture-beta
     nodered:B <-- T:data
     data:L --> R:influx
     data:R --> L:postgres
-    data:B --> T:images
     httpserver:R <-- L:rtmpserver
 
     group raspi[Raspberry Pi]
