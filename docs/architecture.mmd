@@ -1,53 +1,51 @@
-flowchart 
+architecture-beta
 
-subgraph Module["Module x2"]
-    Sensors["Sensors"]
-    ESP32["ESP32"]
-    Actuators["Actuators"]
-    Camera["RGB Camera"]
+    service user(internet)[User]
+    
+    group vm[Virtual Machine]
 
-    Sensors --> ESP32
-    ESP32 --> Actuators
-end
+    service grafana(server)[Grafana] in vm
+    service nodered(server)[NodeRed] in vm
+    service influx(database)[InfluxDB] in vm
+    service postgres(database)[PostgreSQL] in vm
+    service images(disk)[Images] in vm
 
-subgraph RaspberryPi["Raspberry Pi"]
-    RTMPClient["RTMP Client"]
-    Python["Python"]
+    group nginx[Nginx] in vm
+    service rtmpserver(server)[RTMP Server] in nginx
+    service httpserver(server)[HTTP Server] in nginx
 
-    Python <-- Serial --> ESP32
-end
+    junction data in vm
 
-subgraph Nginx["NginX"]
-    RTMPServer["RTMP Server :1935"]
-    File[/"M3U8"/]
-    HTTPServer["HTTP Server :5000"]
+    user:R <--> L:grafana
+    grafana:R <--> L:nodered
+    grafana:T <-- B:httpserver
+    nodered:B <-- T:data
+    data:L --> R:influx
+    data:R --> L:postgres
+    data:B --> T:images
+    httpserver:R <-- L:rtmpserver
 
-    RTMPServer --> File
-    File --> HTTPServer
-end
+    group raspi[Raspberry Pi]
 
-subgraph Datacenter["Virtual Machine"]
-    Grafana["Grafana :3000"]
-    NodeRed["NodeRed :1880"]
-    Influx[("InfluxDB :8086")]
-    SQL[("PostgreSQL" :5432)]
-    Nginx
+    service rtmpclient(server)[RTMP Client] in raspi
+    service python(server)[Python] in raspi
 
-    NodeRed <-- TCP --> SQL
-    NodeRed <-- HTTP --> Influx
-    Grafana <-- HTTP --> NodeRed
-end
+    junction video in raspi
 
-User["User"]
+    nodered:R <--> L:python
+    rtmpserver:R <-- L:video
+    video:T -- B:rtmpclient
+    rtmpserver:B --> T:python
 
-%% ---------------- STREAM FLOW ----------------
-Camera -- V4L2 --> RTMPClient
-RTMPClient -- RTMP --> RTMPServer
-RTMPServer -- RTMP --> Python
+    group module[Modules]
 
-%% ---------------- DATA FLOW ----------------
-NodeRed <-- MQTT, HTTP --> Python
+    service camera[RGB Camera] in module
+    service sensors[Sensors] in module
+    service actuators[Actuators] in module
+    service esp(server)[ESP32] in module
 
-%% ---------------- VISUALIZATION ----------------
-HTTPServer -- HTTP --> Grafana
-User <-- HTTP --> Grafana
+
+    python:R -- L:esp
+    esp:R -- L:sensors
+    esp:B -- T:actuators
+    rtmpclient:R <-- L:camera
