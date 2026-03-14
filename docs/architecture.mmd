@@ -30,8 +30,10 @@ subgraph Datacenter["Virtual Machine"]
     Grafana["Grafana :3000"]
     NodeRed["NodeRed :1880"]
     Influx[("InfluxDB :8086")]
+    SQL[("PostgreSQL" :5432)]
     Nginx
 
+    NodeRed <-- TCP --> SQL
     NodeRed <-- HTTP --> Influx
     Grafana <-- HTTP --> NodeRed
 end
@@ -44,7 +46,7 @@ RTMPClient -- RTMP --> RTMPServer
 RTMPServer -- RTMP --> Python
 
 %% ---------------- DATA FLOW ----------------
-NodeRed <-- MQTT --> Python
+NodeRed <-- MQTT, HTTP --> Python
 
 %% ---------------- VISUALIZATION ----------------
 HTTPServer -- HTTP --> Grafana

@@ -26,7 +26,7 @@ services:
     image: influxdb:2
     container_name: influxdb
     ports:
-      - ${DOCKER_INFLUXDB_PORT}:8086
+      - 127.0.0.1:${DOCKER_INFLUXDB_PORT}:8086
     restart: unless-stopped
     volumes:
       - ${DOCKER_INFLUXDB_VOLUME}:/var/lib/influxdb2:rw
@@ -37,8 +37,19 @@ services:
     build: ./stream
     container_name: stream
     ports:
-      - ${STREAM_HTTP_PORT}:5000
+      - 127.0.0.1:${STREAM_HTTP_PORT}:5000
       - ${STREAM_RTMP_PORT}:1935
     restart: unless-stopped
+    env_file:
+      - .env
+
+  database:
+    image: bitnami/postgresql
+    container_name: postgresql
+    ports:
+      - 127.0.0.1:${POSTGRESQL_PORT}:5432
+    restart: unless-stopped
+    volumes:
+      - ${POSTGRESQL_VOLUME}:/bitnami/postgresql:rw
     env_file:
       - .env
