@@ -37,7 +37,7 @@ RTMP_CMD = [
     "1000k",
     "-f",
     "flv",
-    "rtmp://{url}:{port}/live/cam_{idx}",
+    "rtmp://{url}:{port}/live/modulo-{idx}",
 ]
 
 
@@ -53,7 +53,7 @@ class CameraThread(threading.Thread):
         self.capture = cv2.VideoCapture(self.device)
         if not self.capture.isOpened():
             self.capture = cv2.VideoCapture(self.device + 1)
-        self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG")) # type: ignore
+        self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))  # type: ignore
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
         self.capture.set(cv2.CAP_PROP_FPS, CAM_FPS)

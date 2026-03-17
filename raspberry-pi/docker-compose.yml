@@ -1,26 +1,4 @@
 services:
-  stream1:
-    build: ./stream
-    container_name: camara-stream1
-    restart: unless-stopped
-    devices:
-      - ${STREAM_DEVICE1}:/dev/video0
-    environment:
-      - STREAM_TOKEN=modulo-1
-    env_file:
-      - .env
-
-  stream2:
-    build: ./stream
-    container_name: camara-stream2
-    restart: unless-stopped
-    devices:
-      - ${STREAM_DEVICE2}:/dev/video0
-    environment:
-      - STREAM_TOKEN=modulo-2
-    env_file:
-      - .env
-
   main:
     build: ./main
     container_name: camara-main
