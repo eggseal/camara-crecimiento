@@ -8,7 +8,6 @@ architecture-beta
     service nodered(server)[NodeRed] in vm
     service influx(database)[InfluxDB] in vm
     service postgres(database)[PostgreSQL] in vm
-    service images(disk)[Images] in vm
 
     group nginx[Nginx] in vm
     service rtmpserver(server)[RTMP Server] in nginx
@@ -21,21 +20,18 @@ architecture-beta
     grafana:T <-- B:httpserver
     nodered:B <-- T:data
     data:L --> R:influx
-    data:R --> L:postgres
-    data:B --> T:images
+    data:B --> T:postgres
     httpserver:R <-- L:rtmpserver
 
     group raspi[Raspberry Pi]
 
-    service rtmpclient(server)[RTMP Client] in raspi
     service python(server)[Python] in raspi
 
     junction video in raspi
 
     nodered:R <--> L:python
     rtmpserver:R <-- L:video
-    video:T -- B:rtmpclient
-    rtmpserver:B --> T:python
+    video:B -- T:python
 
     group module[Modules]
 
@@ -44,8 +40,11 @@ architecture-beta
     service actuators[Actuators] in module
     service esp(server)[ESP32] in module
 
+    junction components in module
 
-    python:R -- L:esp
+
+    esp:T -- B:components
+    camera:B -- T:components
+    components:L --> R:python
     esp:R -- L:sensors
-    esp:B -- T:actuators
-    rtmpclient:R <-- L:camera
+    esp:L -- R:actuators

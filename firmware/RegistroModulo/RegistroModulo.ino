@@ -1,22 +1,29 @@
-#include <EEPROM.h>
+#include <Preferences.h>
 
-#define ADDRESS 0x0
+Preferences preferences;
+
+uint8_t id = 0;
 
 void setup() {
     Serial.begin(115200);
-    Serial.print("Enter the number ID (1-256): ");
+    preferences.begin("module");
+    id = preferences.getUChar("id");
+    Serial.printf("Module registered with ID [%d]\n", id);
+
+    Serial.println("Enter a number to change the module ID: (1-256): ");
 }
 
 void loop() {
     if (!Serial.available()) return;
     int input = Serial.parseInt();
 
-    if (input < 1 || input > 256) {
+    if (input < 0x01 || input > 0xFF) {
         Serial.println("Invalid value.");
         return;
     }
 
-    byte value = input - 1;
-    EEPROM.update(ADDRESS, value);
-    Serial.println("Value stored.");
+    id = input;
+    preferences.putUChar("id", id);
+    Serial.printf("Value stored in module.id [%d]\n", id);
+    ESP.restart();
 }

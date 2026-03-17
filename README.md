@@ -13,7 +13,6 @@ architecture-beta
     service nodered(server)[NodeRed] in vm
     service influx(database)[InfluxDB] in vm
     service postgres(database)[PostgreSQL] in vm
-    service images(disk)[Images] in vm
 
     group nginx[Nginx] in vm
     service rtmpserver(server)[RTMP Server] in nginx
@@ -26,21 +25,18 @@ architecture-beta
     grafana:T <-- B:httpserver
     nodered:B <-- T:data
     data:L --> R:influx
-    data:R --> L:postgres
-    data:B --> T:images
+    data:B --> T:postgres
     httpserver:R <-- L:rtmpserver
 
     group raspi[Raspberry Pi]
 
-    service rtmpclient(server)[RTMP Client] in raspi
     service python(server)[Python] in raspi
 
     junction video in raspi
 
     nodered:R <--> L:python
     rtmpserver:R <-- L:video
-    video:T -- B:rtmpclient
-    rtmpserver:B --> T:python
+    video:B -- T:python
 
     group module[Modules]
 
@@ -49,11 +45,15 @@ architecture-beta
     service actuators[Actuators] in module
     service esp(server)[ESP32] in module
 
+    junction components in module
 
-    python:R -- L:esp
+
+    esp:T -- B:components
+    camera:B -- T:components
+    components:L --> R:python
     esp:R -- L:sensors
-    esp:B -- T:actuators
-    rtmpclient:R <-- L:camera
+    esp:L -- R:actuators
+
 ```
 
 ## Entity-Relationship Diagram
@@ -76,6 +76,7 @@ erDiagram
         float ph
         float white_light
         float uv_light
+        _ _
     }
 
     EXPERIMENT {
@@ -92,4 +93,77 @@ erDiagram
 
     EXPERIMENT ||--o{ SENSOR_DATA : has
     EXPERIMENT ||--o{ IMAGES : has
+```
+
+## Flowcharts
+
+### Main Loop
+```mermaid
+flowchart TB
+
+subgraph SerialLoop["Serial Ingestion Loop"]
+    ReadPorts[Read all serial ports]
+    ReceiveJSON[Receive JSON from ESP32]
+    AddTimestamp[Add timestamp]
+
+    CheckInternet{Internet available?}
+
+    StoreSQLite[Store data in SQLite]
+    SendMQTT[Send data to MQTT server]
+
+    ReadPorts --> ReceiveJSON --> AddTimestamp --> CheckInternet
+
+    CheckInternet -- Yes --> SendMQTT
+    CheckInternet -- No --> StoreSQLite
+end
+
+subgraph Snapshot["Snapshot on Data + Interval"]
+    Interval{Time to capture image?}
+    CaptureFrame[Capture frame]
+
+    CheckInternetImg{Internet available?}
+    StoreImage[Store image locally]
+    SendHTTP[Send image to Node-RED]
+
+    Interval -- Yes --> CaptureFrame --> CheckInternetImg
+
+    CheckInternetImg -- Yes --> SendHTTP
+    CheckInternetImg -- No --> StoreImage
+end
+
+AddTimestamp --> Interval
+
+```
+
+### Other events
+
+```mermaid
+flowchart LR
+
+subgraph MQTT["MQTT Event Handler"]
+    ReceiveMQTT[Receive data from MQTT server]
+    BroadcastESP[Send to all ESP32]
+
+    ReceiveMQTT --> BroadcastESP
+end
+
+subgraph Stream["Camera Stream"]
+    Camera[Read RGB Camera]
+    RTMP[Send to RTMP server]
+
+    Camera --> RTMP --> Camera
+end
+
+subgraph Reconnect["On Internet Reconnect"]
+    ReconnectCheck[Ping Google]
+    DetectReconnect{Connection restored?}
+
+    FlushSQLite[Send all stored SQLite data]
+    FlushImages[Send all stored images]
+
+    ReconnectCheck --> DetectReconnect
+    DetectReconnect -- Yes --> FlushSQLite
+    DetectReconnect -- No --> ReconnectCheck
+    FlushSQLite --> FlushImages
+end
 ```
