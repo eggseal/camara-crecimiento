@@ -1,21 +1,26 @@
 erDiagram
 
     SENSOR_DATA {
+        %% Metadata
         int experiment_id
         datetime timestamp
+        %% Sensors
         float ambient_temperature
         float ambient_humidity
-        float ambien_co2
-        float soil_humidity
+        float water_level
         float soil_temp
-        float electric_conductivity
+        float soil_humidity
+        float ph
         float nitrogen
         float phosphorus
         float potassium
-        float ph
+        float electric_conductivity
         float white_light
         float uv_light
-        _ _
+        %% Actuators
+        boolean fan_1
+        boolean fan_2
+        boolean pump
     }
 
     EXPERIMENT {

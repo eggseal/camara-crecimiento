@@ -7,7 +7,6 @@ architecture-beta
     service grafana(server)[Grafana] in vm
     service nodered(server)[NodeRed] in vm
     service influx(database)[InfluxDB] in vm
-    service postgres(database)[PostgreSQL] in vm
 
     group nginx[Nginx] in vm
     service rtmpserver(server)[RTMP Server] in nginx
@@ -18,9 +17,7 @@ architecture-beta
     user:R <--> L:grafana
     grafana:R <--> L:nodered
     grafana:T <-- B:httpserver
-    nodered:B <-- T:data
-    data:L --> R:influx
-    data:B --> T:postgres
+    nodered:B <-- T:influx
     httpserver:R <-- L:rtmpserver
 
     group raspi[Raspberry Pi]

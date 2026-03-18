@@ -12,7 +12,6 @@ architecture-beta
     service grafana(server)[Grafana] in vm
     service nodered(server)[NodeRed] in vm
     service influx(database)[InfluxDB] in vm
-    service postgres(database)[PostgreSQL] in vm
 
     group nginx[Nginx] in vm
     service rtmpserver(server)[RTMP Server] in nginx
@@ -23,9 +22,7 @@ architecture-beta
     user:R <--> L:grafana
     grafana:R <--> L:nodered
     grafana:T <-- B:httpserver
-    nodered:B <-- T:data
-    data:L --> R:influx
-    data:B --> T:postgres
+    nodered:B <-- T:influx
     httpserver:R <-- L:rtmpserver
 
     group raspi[Raspberry Pi]
@@ -53,7 +50,6 @@ architecture-beta
     components:L --> R:python
     esp:R -- L:sensors
     esp:L -- R:actuators
-
 ```
 
 ## Entity-Relationship Diagram
@@ -62,21 +58,26 @@ architecture-beta
 erDiagram
 
     SENSOR_DATA {
+        %% Metadata
         int experiment_id
         datetime timestamp
+        %% Sensors
         float ambient_temperature
         float ambient_humidity
-        float ambien_co2
-        float soil_humidity
+        float water_level
         float soil_temp
-        float electric_conductivity
+        float soil_humidity
+        float ph
         float nitrogen
         float phosphorus
         float potassium
-        float ph
+        float electric_conductivity
         float white_light
         float uv_light
-        _ _
+        %% Actuators
+        boolean fan_1
+        boolean fan_2
+        boolean pump
     }
 
     EXPERIMENT {
