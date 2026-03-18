@@ -42,14 +42,3 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-
-  database:
-    image: bitnami/postgresql
-    container_name: postgresql
-    ports:
-      - ${POSTGRESQL_PORT}:5432
-    restart: unless-stopped
-    volumes:
-      - ${POSTGRESQL_VOLUME}:/bitnami/postgresql:rw
-    env_file:
-      - .env
