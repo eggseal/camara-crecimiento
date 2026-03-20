@@ -44,15 +44,14 @@ RTMP_CMD = [
 class CameraThread(threading.Thread):
     cameras = []
 
-    def __init__(self, id: int, device: int, stop_event: threading.Event):
+    def __init__(self, id: int, device: str, stop_event: threading.Event):
         super().__init__(daemon=True)
         self.id = id
         self.device = device
         self.stop_event = stop_event
 
+
         self.capture = cv2.VideoCapture(self.device)
-        if not self.capture.isOpened():
-            self.capture = cv2.VideoCapture(self.device + 1)
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))  # type: ignore
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
@@ -71,7 +70,7 @@ class CameraThread(threading.Thread):
         CameraThread.cameras.append(self)
 
     def start_ffmpeg(self):
-        return subprocess.Popen(self.cmd, stdin=subprocess.PIPE)
+        return subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def run(self):
         issued_warning = False
