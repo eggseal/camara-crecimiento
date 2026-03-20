@@ -5,29 +5,36 @@ import json
 from json import JSONDecodeError
 from datetime import datetime
 
-import config   
+import config
 import serial
 import serial.tools.list_ports as list_ports
 from modules.camera import CameraThread
 
 stop_event = threading.Event()
-CameraThread(1, config.STREAM_DEVICE1, stop_event)
-CameraThread(2, config.STREAM_DEVICE2, stop_event)
 module_lock = threading.Lock()
 modules: list[serial.Serial] = []
+try:
+    CameraThread(1, config.STREAM_DEVICE1, stop_event)
+except RuntimeError as e:
+    logging.error(e)
+try:
+    CameraThread(2, config.STREAM_DEVICE2, stop_event)
+except RuntimeError as e:
+    logging.error(e)
 
-COMMANDS = {
-    "READ_ALL": lambda: json.dumps({"cmd": 1}).encode() + b"\n"
-}
+
+COMMANDS = {"READ_ALL": lambda: json.dumps({"cmd": 1}).encode() + b"\n"}
 
 
 def reconnect_modules():
     while not stop_event.is_set():
         ports = list_ports.comports(include_links=True)
         for port in ports:
-            if port.vid is None: continue
+            if port.vid is None:
+                continue
             with module_lock:
-                if any(mod.port == port.device for mod in modules): continue
+                if any(mod.port == port.device for mod in modules):
+                    continue
 
             try:
                 logging.info("Attempting serial connection with device %s", port.device)
@@ -58,7 +65,7 @@ def main():
                     modules.remove(module)
                     logging.error("Timed out waiting for ESP32 response.")
                     continue
-                
+
                 logging.info("Received message %s", res)
                 data = json.loads(res.decode().strip())
                 data["timestamp"] = timestamp
@@ -84,4 +91,3 @@ if __name__ == "__main__":
     finally:
         stop_event.set()
         reconnect_modules_thread.join()
-
