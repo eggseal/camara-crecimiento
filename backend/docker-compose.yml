@@ -6,7 +6,7 @@ services:
       - ${NODE_RED_PORT}:1880
     restart: unless-stopped
     volumes:
-      - ${NODE_RED_VOLUME}:/data
+      - nodered-data:/data
     env_file:
       - .env
 
@@ -18,7 +18,7 @@ services:
       - ${GF_PORT}:3000
     restart: unless-stopped
     volumes:
-      - ${GF_VOLUME}:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
     env_file:
       - .env
 
@@ -29,7 +29,7 @@ services:
       - ${DOCKER_INFLUXDB_PORT}:8086
     restart: unless-stopped
     volumes:
-      - ${DOCKER_INFLUXDB_VOLUME}:/var/lib/influxdb2:rw
+      - influx-data:/var/lib/influxdb2:rw
     env_file:
       - .env
 
@@ -43,13 +43,7 @@ services:
     env_file:
       - .env
 
-  database:
-    image: bitnami/postgresql
-    container_name: postgresql
-    ports:
-      - ${POSTGRESQL_PORT}:5432
-    restart: unless-stopped
-    volumes:
-      - ${POSTGRESQL_VOLUME}:/bitnami/postgresql:rw
-    env_file:
-      - .env
+volumes:
+  nodered-data:
+  grafana-data:
+  influx-data:

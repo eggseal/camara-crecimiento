@@ -2,6 +2,7 @@ const { search, origin } = window.location;
 const params = new URLSearchParams(search);
 const token = params.get("token");
 const streamURL = `${origin}/hls/${token}.m3u8`;
+console.log(streamURL, token);
 
 const video = document.getElementById("live-stream");
 const playVideo = () => video.play();
@@ -28,7 +29,7 @@ const startStream = () => {
             retryDelay = baseDelay;
             video.play();
         });
-        hls.on(Hls.Events.ERROR, (_, _) => {
+        hls.on(Hls.Events.ERROR, (a, b) => {
             hls.destroy();
             retryDelay = Math.min(retryDelay * 2, 60_000);
             setTimeout(startStream, retryDelay);
