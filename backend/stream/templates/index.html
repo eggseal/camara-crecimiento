@@ -1,12 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Camera Stream</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        body, html {
+            margin: 0;
+            background-color: black;
+        }
+        img {
+            display: block;
+            width: 100dvw;
+            height: 100dvh;
+            object-fit: contain;
+            object-position: center;
+        }
+    </style>
 </head>
 <body>
-    <h2>Camera {{ cam_id }}</h2>
-
-    <img src="/stream/{{ cam_id }}" width="320" height="240" />
-
+    <img src="/stream/{{ cam_id }}"/>
 </body>
 </html>
