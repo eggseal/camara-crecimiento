@@ -39,10 +39,10 @@ class CameraThread(threading.Thread):
         CameraThread.cameras.append(self)
 
     def connect_ws(self):
+        url = f"wss://{config.STREAM_SERVER_URL}/ws/cam/{self.id}"
+        logging.info("Connecting to Web Socket %s", url)
         try:
-            ws = websocket.create_connection(
-                f"ws://{config.STREAM_SERVER_URL}/ws/cam/{self.id}", timeout=5
-            )
+            ws = websocket.create_connection(url, timeout=5)
             logging.info("WebSocket connected for camera %d", self.id)
             return ws
         except Exception as e:
@@ -53,25 +53,26 @@ class CameraThread(threading.Thread):
         issued_warning = False
         while not self.stop_event.is_set():
             status, frame = self.capture.read()
-
+            # Failed to read camera
             if not status or frame is None or frame.size == 0:
                 if not issued_warning:
                     logging.warning("Camera %d failed during reading", self.id)
                     issued_warning = True
                 time.sleep(1.0 / CAM_FPS)
                 continue
-
+            # Store current frame
             with self.lock:
                 self.frame = frame.copy()
             success, jpeg = cv2.imencode(".jpg", frame, encoding)
             if not success:
                 continue
-
+            # Reconnect to WS every 5 seconds if disconnected
             if self.ws is None:
                 if time.time() - self.last_connect_attempt > 5:
+                    logging.info("Attempting to reconnect to web socket.")
                     self.last_connect_attempt = time.time()
                     self.ws = self.connect_ws()
-
+            # Send current frame to web socket
             if self.ws:
                 try:
                     self.ws.send(jpeg.tobytes(), opcode=websocket.ABNF.OPCODE_BINARY)

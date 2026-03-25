@@ -1,8 +1,11 @@
 services:
   main:
-    build: ./main
+    build: .
     container_name: camara-main
     restart: unless-stopped
     privileged: true
     env_file:
       - .env
+    devices:
+      - ${STREAM_DEVICE1}:/dev/video0
+      - ${STREAM_DEVICE2}:/dev/video2
